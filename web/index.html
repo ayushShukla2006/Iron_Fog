@@ -2,7 +2,9 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
 <title>IRON FOG</title>
 <link rel="icon" href="favicon.ico" type="image/x-icon">
 <style>
@@ -451,6 +453,186 @@
     transition: background 0.15s;
   }
   #chat-send:hover { background: rgba(200,168,75,0.1); }
+
+  /* ══════════════════════════════════════════════════════════
+     MOBILE STYLES
+  ══════════════════════════════════════════════════════════ */
+
+  /* ── Bottom resource HUD strip ─────────────────────────── */
+  #mobile-hud {
+    display: none; position: absolute;
+    bottom: 0; left: 0; right: 0; height: 58px;
+    background: rgba(7,10,14,0.96);
+    border-top: 1px solid var(--border);
+    backdrop-filter: blur(8px);
+    z-index: 20; padding: 0 10px;
+    align-items: center; gap: 6px;
+    touch-action: none;
+  }
+  .mob-res { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 2px; }
+  .mob-res-label { font-size: 0.52rem; letter-spacing: 0.1em; color: var(--dim); text-transform: uppercase; }
+  .mob-res-bar-bg { width: 100%; height: 4px; background: var(--border); border-radius: 2px; overflow: hidden; }
+  .mob-res-bar-fill { height: 100%; border-radius: 2px; transition: width 0.3s; }
+  .mob-res-val { font-size: 0.6rem; color: var(--text); }
+
+  /* ── FAB buttons ───────────────────────────────────────── */
+  #mobile-fabs {
+    display: none; position: absolute;
+    bottom: 66px; right: 12px;
+    flex-direction: column; gap: 10px; z-index: 25;
+  }
+  .fab-btn {
+    width: 50px; height: 50px; border-radius: 50%;
+    border: 1px solid var(--border);
+    background: rgba(10,12,15,0.94);
+    color: var(--text); font-size: 1.25rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; position: relative;
+    backdrop-filter: blur(4px);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: transform 0.1s, background 0.15s, border-color 0.15s;
+    user-select: none;
+  }
+  .fab-btn:active { transform: scale(0.88); }
+
+  /* ── Attack hold reticle ────────────────────────────────── */
+  #mob-hold-ring {
+    display: none; position: absolute;
+    width: 52px; height: 52px; border-radius: 50%;
+    border: 3px solid var(--red);
+    pointer-events: none; z-index: 30;
+    transform: translate(-50%, -50%);
+    box-shadow: 0 0 12px rgba(231,76,60,0.5);
+    animation: ring-pulse 0.4s ease infinite alternate;
+  }
+  @keyframes ring-pulse {
+    from { box-shadow: 0 0 6px rgba(231,76,60,0.4); }
+    to   { box-shadow: 0 0 18px rgba(231,76,60,0.8); }
+  }
+  #mob-hold-ring.visible { display: block; }
+
+  /* ── Mode pill ──────────────────────────────────────────── */
+  #mobile-mode-pill {
+    display: none; position: absolute;
+    bottom: 66px; left: 50%; transform: translateX(-50%);
+    background: rgba(10,12,15,0.9); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 14px;
+    font-size: 0.65rem; letter-spacing: 0.15em;
+    color: var(--dim); pointer-events: none;
+    text-transform: uppercase; white-space: nowrap; z-index: 21;
+  }
+  #mobile-mode-pill.move-mode   { color: var(--green); border-color: var(--green); }
+  #mobile-mode-pill.attack-mode { color: var(--red);   border-color: var(--red); }
+
+  /* ── Sidebar drawer ─────────────────────────────────────── */
+  #mob-drawer-backdrop {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.55); z-index: 80;
+  }
+  #mob-drawer-backdrop.open { display: block; }
+  #mob-drawer {
+    position: fixed; top: 0; right: -100%;
+    width: min(300px, 88vw); height: 100%;
+    background: var(--panel); border-left: 1px solid var(--border);
+    z-index: 81; display: flex; flex-direction: column;
+    transition: right 0.26s cubic-bezier(0.4,0,0.2,1); overflow: hidden;
+  }
+  #mob-drawer.open { right: 0; }
+  #mob-drawer-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid var(--border);
+    background: #070a0d; flex-shrink: 0;
+  }
+  #mob-drawer-header span { font-family: var(--font-head); font-size: 0.9rem; letter-spacing: 0.2em; color: var(--accent); }
+  #mob-drawer-close {
+    background: none; border: none; color: var(--dim);
+    font-size: 1.3rem; cursor: pointer; padding: 4px 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mob-drawer-body {
+    flex: 1; overflow-y: auto; padding: 14px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  #mob-drawer-body::-webkit-scrollbar { width: 3px; }
+  #mob-drawer-body::-webkit-scrollbar-thumb { background: var(--border); }
+  #mob-minimap-wrap { display: flex; justify-content: center; }
+  #mob-minimap-canvas { border: 1px solid var(--border); border-radius: 2px; }
+  .mob-drawer-title {
+    font-family: var(--font-head); font-size: 0.65rem;
+    letter-spacing: 0.2em; color: var(--dim);
+    text-transform: uppercase; margin-bottom: 8px;
+  }
+
+  /* ── Mobile chat overlay ────────────────────────────────── */
+  #mob-chat-overlay {
+    display: none; position: fixed;
+    left: 0; right: 0; bottom: 0;
+    background: rgba(7,10,14,0.97);
+    border-top: 1px solid var(--border);
+    z-index: 90; flex-direction: column;
+    max-height: 55vh; backdrop-filter: blur(8px);
+  }
+  #mob-chat-overlay.open { display: flex; }
+  #mob-chat-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px; border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  #mob-chat-header span { font-size: 0.72rem; letter-spacing: 0.12em; color: var(--dim); }
+  #mob-chat-close {
+    background: none; border: none; color: var(--dim);
+    font-size: 1.2rem; cursor: pointer; padding: 2px 8px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #mob-chat-messages {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    display: flex; flex-direction: column; gap: 3px;
+  }
+  #mob-chat-messages::-webkit-scrollbar { width: 3px; }
+  #mob-chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
+  #mob-chat-input-row {
+    display: flex; border-top: 1px solid var(--border); flex-shrink: 0;
+  }
+  #mob-chat-input {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--text); font-family: var(--font-main);
+    font-size: 1rem; padding: 10px 12px;
+  }
+  #mob-chat-input::placeholder { color: var(--dim); }
+  #mob-chat-send {
+    background: none; border: none; border-left: 1px solid var(--border);
+    color: var(--accent); font-family: var(--font-main);
+    font-size: 0.8rem; padding: 0 14px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* unread badge */
+  #mob-chat-badge {
+    position: absolute; top: -4px; right: -4px;
+    background: var(--red); border-radius: 50%;
+    width: 17px; height: 17px; font-size: 0.58rem;
+    color: #fff; display: none;
+    align-items: center; justify-content: center;
+    font-family: var(--font-head); pointer-events: none;
+  }
+  #mob-chat-badge.visible { display: flex; }
+
+  @media (max-width: 700px) {
+    #side-panel       { display: none !important; }
+    #keyhints         { display: none !important; }
+    #mode-indicator   { display: none !important; }
+    #mobile-hud       { display: flex; }
+    #mobile-fabs      { display: flex; }
+    #mobile-mode-pill { display: block; }
+    #canvas-container { padding-bottom: 58px; }
+    #match-timer-hud  { top: 10px; font-size: 0.85rem; padding: 3px 12px; }
+    #notifications    { top: 42px; }
+    #upgrade-panel    { width: calc(100vw - 24px); max-height: 80vh; overflow-y: auto;
+                        top: auto; bottom: 66px; left: 50%;
+                        transform: translateX(-50%) scale(0.95);
+                        transform-origin: bottom center; }
+    #upgrade-panel.open { transform: translateX(-50%) scale(1); }
+  }
 </style>
 </head>
 <body>
@@ -507,9 +689,46 @@
       </div>
     </div>
 
+    <!-- MOBILE: bottom resource HUD -->
+    <div id="mobile-hud">
+      <div class="mob-res">
+        <div class="mob-res-label">HP</div>
+        <div class="mob-res-bar-bg"><div class="mob-res-bar-fill" id="mob-bar-hp" style="width:100%;background:#16a085"></div></div>
+        <div class="mob-res-val" id="mob-val-hp">100</div>
+      </div>
+      <div class="mob-res">
+        <div class="mob-res-label">FUEL</div>
+        <div class="mob-res-bar-bg"><div class="mob-res-bar-fill" id="mob-bar-fuel" style="width:80%;background:#27ae60"></div></div>
+        <div class="mob-res-val" id="mob-val-fuel">80</div>
+      </div>
+      <div class="mob-res">
+        <div class="mob-res-label">AMMO</div>
+        <div class="mob-res-bar-bg"><div class="mob-res-bar-fill" id="mob-bar-ammo" style="width:50%;background:#c0392b"></div></div>
+        <div class="mob-res-val" id="mob-val-ammo">50</div>
+      </div>
+      <div class="mob-res">
+        <div class="mob-res-label">GEARS</div>
+        <div class="mob-res-bar-bg"><div class="mob-res-bar-fill" id="mob-bar-gear" style="width:0%;background:#c8a84b"></div></div>
+        <div class="mob-res-val" id="mob-val-gear">0</div>
+      </div>
+    </div>
+
+    <!-- MOBILE: mode pill -->
+    <div id="mobile-mode-pill">TAP TO MOVE · HOLD TO FIRE</div>
+
+    <!-- MOBILE: FAB buttons -->
+    <div id="mobile-fabs">
+      <div class="fab-btn" id="fab-upgrade" title="Upgrades">⚙️</div>
+      <div class="fab-btn" id="fab-map" title="Map &amp; Stats">🗺️</div>
+      <div class="fab-btn" id="fab-chat" title="Chat" style="position:relative;">
+        💬<div id="mob-chat-badge"></div>
+      </div>
+      <div class="fab-btn" id="fab-center" title="Center on tank">⊕</div>
+    </div>
+
   </div><!-- end canvas-container -->
 
-  <!-- SIDE PANEL -->
+  <!-- SIDE PANEL (desktop) -->
   <div id="side-panel">
     <div class="panel-section" style="background:#070a0d; padding:14px;">
       <div style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:0.2em;color:var(--accent);">IRON FOG</div>
@@ -553,7 +772,7 @@
       <div id="fort-info" style="font-size:0.7rem;color:var(--dim);line-height:1.8;"></div>
     </div>
 
-    <!-- CHAT -->
+    <!-- CHAT (desktop) -->
     <div id="chat-section">
       <div class="panel-title" style="padding:8px 10px 4px;margin:0;">💬 Chat</div>
       <div id="chat-messages"></div>
@@ -562,6 +781,53 @@
         <button id="chat-send">SEND</button>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MOBILE OVERLAYS (rendered outside game-wrapper)
+════════════════════════════════════════════════════════════ -->
+
+<!-- Attack hold ring (follows touch position) -->
+<div id="mob-hold-ring"></div>
+
+<!-- Sidebar drawer backdrop -->
+<div id="mob-drawer-backdrop"></div>
+
+<!-- Sidebar drawer -->
+<div id="mob-drawer">
+  <div id="mob-drawer-header">
+    <span>IRON FOG</span>
+    <button id="mob-drawer-close">✕</button>
+  </div>
+  <div id="mob-drawer-body">
+    <div>
+      <div class="mob-drawer-title">Minimap</div>
+      <div id="mob-minimap-wrap">
+        <canvas id="mob-minimap-canvas" width="240" height="240"></canvas>
+      </div>
+    </div>
+    <div>
+      <div class="mob-drawer-title">Leaderboard</div>
+      <div id="mob-leaderboard"></div>
+    </div>
+    <div>
+      <div class="mob-drawer-title">My Forts</div>
+      <div id="mob-fort-info" style="font-size:0.7rem;color:var(--dim);line-height:1.8;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile chat overlay -->
+<div id="mob-chat-overlay">
+  <div id="mob-chat-header">
+    <span>💬 CHAT</span>
+    <button id="mob-chat-close">✕</button>
+  </div>
+  <div id="mob-chat-messages"></div>
+  <div id="mob-chat-input-row">
+    <input id="mob-chat-input" type="text" placeholder="Say something…" maxlength="120" autocomplete="off" enterkeyhint="send">
+    <button id="mob-chat-send">SEND</button>
   </div>
 </div>
 
@@ -836,13 +1102,38 @@ function render() {
       const p = hexToPixel(fort.q, fort.r);
       const sc = worldToScreen(p.x, p.y);
       const capColor = fort.capturing_player === myPlayerId ? '#2ecc71' : '#e74c3c';
+
+      // Match server: recaptured forts (was_owned) take 1.5x longer
+      const CAPTURE_TIME = 5.0;
+      const RECAPTURE_MULTIPLIER = 1.5;
+      const effectiveCaptureTime = CAPTURE_TIME * (fort.was_owned ? RECAPTURE_MULTIPLIER : 1.0);
+      const progress = Math.min(fort.capture_progress / effectiveCaptureTime, 1.0);
+
+      // Background ring (shows total time remaining)
+      ctx.beginPath();
+      ctx.arc(sc.x, sc.y, HEX_SIZE * camScale * 0.55, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      ctx.lineWidth = 3 * camScale;
+      ctx.stroke();
+
+      // Filled arc showing actual progress
       ctx.beginPath();
       ctx.arc(sc.x, sc.y, HEX_SIZE * camScale * 0.55,
-        -Math.PI/2,
-        -Math.PI/2 + (fort.capture_progress/5) * Math.PI*2);
+        -Math.PI / 2,
+        -Math.PI / 2 + progress * Math.PI * 2);
       ctx.strokeStyle = capColor;
       ctx.lineWidth = 3 * camScale;
       ctx.stroke();
+
+      // Show a small lock icon / indicator on recapture forts so player knows it's slower
+      if (fort.was_owned && camScale > 0.5) {
+        ctx.font = `${Math.max(8, 10 * camScale)}px serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.globalAlpha = 0.7;
+        ctx.fillText('🔒', sc.x + HEX_SIZE * camScale * 0.5, sc.y - HEX_SIZE * camScale * 0.5);
+        ctx.globalAlpha = 1;
+      }
     }
 
     // fort icon
@@ -1663,7 +1954,6 @@ function escHtml(s) {
 
 // ── Asset loading + start ─────────────────────────────────────────────────────
 async function init() {
-  // Try loading user-provided assets; fallback to programmatic drawing
   await Promise.all([
     loadAsset('tank_self',  'assets/tank_self.png'),
     loadAsset('tank_enemy', 'assets/tank_enemy.png'),
@@ -1674,6 +1964,397 @@ async function init() {
   ]);
   requestAnimationFrame(render);
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+//  MOBILE CONTROLS
+// ═══════════════════════════════════════════════════════════════════════════
+
+const isMobile = () => window.innerWidth <= 700 || ('ontouchstart' in window && window.innerWidth <= 900);
+
+// ── Mobile state ─────────────────────────────────────────────────────────────
+let mobTouches        = {};      // active touch points by identifier
+let mobPinching       = false;   // two-finger gesture active
+let mobPinchMid       = null;    // {x,y} midpoint last frame
+let mobPinchDist      = null;    // distance last frame
+let mobRecentPinch    = false;   // grace window after pinch ends
+let mobHoldTimer      = null;    // setTimeout for long-press attack
+let mobHoldPos        = null;    // screen position of hold
+let mobChatUnread     = 0;
+let mobChatOpen       = false;
+let mobDrawerOpen     = false;
+const HOLD_MS         = 420;     // ms to distinguish tap vs hold
+const TAP_MOVE_THRESH = 12;      // px — movement beyond this cancels tap into pan
+
+// ── Utility ──────────────────────────────────────────────────────────────────
+function mobSetPill(text, cls) {
+  const p = document.getElementById('mobile-mode-pill');
+  if (!p) return;
+  p.textContent = text;
+  p.className   = cls || '';
+}
+
+function mobSetMobBar(name, val, max) {
+  const bar = document.getElementById(`mob-bar-${name}`);
+  const lbl = document.getElementById(`mob-val-${name}`);
+  if (!bar || !lbl) return;
+  bar.style.width = Math.max(0, Math.min(100, (val / max) * 100)) + '%';
+  lbl.textContent = Math.floor(val);
+}
+
+function mobUpdateHUD(tank) {
+  if (!tank || !isMobile()) return;
+  mobSetMobBar('hp',   tank.hp    ?? 0, tank.max_hp ?? 100);
+  mobSetMobBar('fuel', tank.fuel  ?? 0, 120);
+  mobSetMobBar('ammo', tank.ammo  ?? 0, 100);
+  mobSetMobBar('gear', tank.gears ?? 0, 99);
+}
+
+// ── Hold ring ────────────────────────────────────────────────────────────────
+function showHoldRing(sx, sy) {
+  const ring = document.getElementById('mob-hold-ring');
+  ring.style.left = sx + 'px';
+  ring.style.top  = sy + 'px';
+  ring.classList.add('visible');
+}
+function hideHoldRing() {
+  document.getElementById('mob-hold-ring').classList.remove('visible');
+}
+
+// ── Drawer (map/stats) ────────────────────────────────────────────────────────
+function openDrawer() {
+  mobDrawerOpen = true;
+  document.getElementById('mob-drawer').classList.add('open');
+  document.getElementById('mob-drawer-backdrop').classList.add('open');
+  mobUpdateDrawer();
+}
+function closeDrawer() {
+  mobDrawerOpen = false;
+  document.getElementById('mob-drawer').classList.remove('open');
+  document.getElementById('mob-drawer-backdrop').classList.remove('open');
+}
+function mobUpdateDrawer() {
+  if (!mobDrawerOpen || !gameState) return;
+  // leaderboard
+  const lb = document.getElementById('mob-leaderboard');
+  lb.innerHTML = (gameState.leaderboard || []).map(l => `
+    <div class="lb-row">
+      <div class="lb-color" style="background:${l.color}"></div>
+      <span class="lb-name">${escHtml(l.name)}</span>
+      <span class="lb-forts">${l.forts}⚑</span>
+      <span class="lb-score">${l.score}</span>
+    </div>`).join('');
+  // forts
+  const myForts = Object.values(gameState.forts).filter(f => f.owner === myPlayerId);
+  document.getElementById('mob-fort-info').innerHTML = myForts.length === 0
+    ? '<span>No forts controlled</span>'
+    : myForts.map(f => `<div>⚑ ${f.ftype.toUpperCase()} (${f.q},${f.r})</div>`).join('');
+  // minimap — reuse renderMinimap but target mob canvas
+  const mc = document.getElementById('mob-minimap-canvas');
+  if (mc && gameState.visible_hexes) {
+    const visSet = new Set(gameState.visible_hexes.map(h => `${h[0]},${h[1]}`));
+    renderMinimapTo(mc, visSet);
+  }
+}
+
+// render minimap to any canvas element
+function renderMinimapTo(targetCanvas, visibleSet) {
+  const mc = targetCanvas.getContext('2d');
+  const W = targetCanvas.width, H = targetCanvas.height;
+  mc.fillStyle = '#060910';
+  mc.fillRect(0, 0, W, H);
+  const S = W / (MAP_RADIUS * 2.2) / 1.73;
+  const cx = W/2, cy = H/2;
+  function mhp(q, r) { return { x: cx + S*(3/2*q), y: cy + S*(Math.sqrt(3)/2*q + Math.sqrt(3)*r) }; }
+  for (let dq = -MAP_RADIUS; dq <= MAP_RADIUS; dq++) {
+    for (let dr = Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr <= Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
+      const p = mhp(dq, dr);
+      mc.fillStyle = visibleSet.has(`${dq},${dr}`) ? '#0d1117' : '#070a0e';
+      mc.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (Math.PI/3)*i;
+        i === 0 ? mc.moveTo(p.x+(S-0.5)*Math.cos(a), p.y+(S-0.5)*Math.sin(a))
+                : mc.lineTo(p.x+(S-0.5)*Math.cos(a), p.y+(S-0.5)*Math.sin(a));
+      }
+      mc.closePath(); mc.fill();
+    }
+  }
+  for (const fort of Object.values(gameState.forts)) {
+    const p = mhp(fort.q, fort.r);
+    mc.fillStyle = fort.owner ? (FORT_COLORS[fort.ftype] || '#8e44ad') : (FORT_COLORS[fort.ftype] || '#8e44ad') + '55';
+    mc.beginPath(); mc.arc(p.x, p.y, S*0.4, 0, Math.PI*2); mc.fill();
+  }
+  for (const [pid, tank] of Object.entries(gameState.tanks)) {
+    if (!tank.alive) continue;
+    const p = mhp(tank.q, tank.r);
+    mc.fillStyle = tank.color;
+    mc.beginPath(); mc.arc(p.x, p.y, pid === myPlayerId ? S*0.65 : S*0.45, 0, Math.PI*2); mc.fill();
+    if (pid === myPlayerId) { mc.strokeStyle = '#fff'; mc.lineWidth = 1; mc.stroke(); }
+  }
+}
+
+// ── Chat overlay ─────────────────────────────────────────────────────────────
+function openMobChat() {
+  mobChatOpen = true;
+  document.getElementById('mob-chat-overlay').classList.add('open');
+  // clear unread badge
+  mobChatUnread = 0;
+  const badge = document.getElementById('mob-chat-badge');
+  badge.classList.remove('visible');
+  badge.textContent = '';
+  // focus input after keyboard animation
+  setTimeout(() => document.getElementById('mob-chat-input').focus(), 120);
+  // scroll to bottom
+  const msgs = document.getElementById('mob-chat-messages');
+  msgs.scrollTop = msgs.scrollHeight;
+}
+function closeMobChat() {
+  mobChatOpen = false;
+  document.getElementById('mob-chat-overlay').classList.remove('open');
+  document.getElementById('mob-chat-input').blur();
+}
+
+// Mirror messages into mobile chat panel
+const _origAddChatMsg = addChatMsg;  // addChatMsg defined earlier
+function addChatMsgMobile(msg) {
+  const box = document.getElementById('mob-chat-messages');
+  if (!box) return;
+  const el = document.createElement('div');
+  if (msg.kind === 'chat') {
+    el.className = 'chat-msg';
+    el.innerHTML = `<span class="chat-ts">${fmtTime(msg.ts)}</span>`
+      + `<span class="chat-name" style="color:${escHtml(msg.color)}">${escHtml(msg.name)}:</span>`
+      + `<span class="chat-text">${escHtml(msg.text)}</span>`;
+  } else if (msg.kind === 'killfeed') {
+    el.className = 'chat-msg killfeed';
+    el.innerHTML = `<span class="chat-ts">${fmtTime(msg.ts)}</span>`
+      + `<span class="chat-text"><span style="color:${escHtml(msg.killerColor)}">${escHtml(msg.killer)}</span>`
+      + ` ☠ <span style="color:${escHtml(msg.victimColor)}">${escHtml(msg.victim)}</span></span>`;
+  } else if (msg.kind === 'capturefeed') {
+    el.className = 'chat-msg capturefeed';
+    el.innerHTML = `<span class="chat-ts">${fmtTime(msg.ts)}</span>`
+      + `<span class="chat-text"><span style="color:${escHtml(msg.color)}">${escHtml(msg.name)}</span>`
+      + ` captured ${escHtml(msg.fortType)} fort</span>`;
+  }
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+  while (box.children.length > 80) box.removeChild(box.firstChild);
+  // badge when closed
+  if (!mobChatOpen && isMobile() && msg.kind === 'chat') {
+    mobChatUnread = Math.min(99, mobChatUnread + 1);
+    const badge = document.getElementById('mob-chat-badge');
+    badge.textContent = mobChatUnread;
+    badge.classList.add('visible');
+  }
+}
+
+// Patch addChatMsg to also feed mobile panel
+const _addChatMsgOriginal = addChatMsg;
+window.addChatMsg = function(msg) {
+  _addChatMsgOriginal(msg);
+  if (isMobile()) addChatMsgMobile(msg);
+};
+
+// Mobile chat send
+function sendMobChat() {
+  const input = document.getElementById('mob-chat-input');
+  const text  = input.value.trim();
+  if (!text || !myPlayerId) return;
+  sendMsg({type: 'chat', text});
+  input.value = '';
+}
+document.getElementById('mob-chat-send').addEventListener('click', sendMobChat);
+document.getElementById('mob-chat-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); sendMobChat(); }
+  e.stopPropagation();
+});
+document.getElementById('mob-chat-close').addEventListener('click', closeMobChat);
+document.getElementById('mob-drawer-close').addEventListener('click', closeDrawer);
+document.getElementById('mob-drawer-backdrop').addEventListener('click', closeDrawer);
+
+// FABs
+document.getElementById('fab-upgrade').addEventListener('click', toggleUpgrades);
+document.getElementById('fab-map').addEventListener('click', openDrawer);
+document.getElementById('fab-chat').addEventListener('click', openMobChat);
+document.getElementById('fab-center').addEventListener('click', () => {
+  if (gameState?.tanks?.[myPlayerId]) {
+    const t = gameState.tanks[myPlayerId];
+    const p = hexToPixel(t.q, t.r);
+    camX = p.x; camY = p.y;
+  }
+});
+
+// ── Touch input ───────────────────────────────────────────────────────────────
+function getTouchMid(t1, t2) {
+  return { x: (t1.clientX + t2.clientX) / 2, y: (t1.clientY + t2.clientY) / 2 };
+}
+function getTouchDist(t1, t2) {
+  const dx = t1.clientX - t2.clientX, dy = t1.clientY - t2.clientY;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+function cancelHold() {
+  clearTimeout(mobHoldTimer);
+  mobHoldTimer = null;
+  mobHoldPos   = null;
+  hideHoldRing();
+}
+
+canvas.addEventListener('touchstart', e => {
+  if (!isMobile()) return;
+  e.preventDefault();
+  const touches = Array.from(e.touches);
+
+  // Record all active touches
+  for (const t of Array.from(e.changedTouches)) {
+    mobTouches[t.identifier] = { x: t.clientX, y: t.clientY, startX: t.clientX, startY: t.clientY };
+  }
+
+  if (touches.length >= 2) {
+    // Two-finger gesture — cancel any pending tap/hold
+    cancelHold();
+    isDragging = false; dragPath = []; dragMode = null;
+    mobPinching  = true;
+    mobPinchMid  = getTouchMid(touches[0], touches[1]);
+    mobPinchDist = getTouchDist(touches[0], touches[1]);
+    return;
+  }
+
+  // One finger
+  if (touches.length === 1 && !mobPinching && !mobRecentPinch) {
+    const t = touches[0];
+    const rect = canvas.getBoundingClientRect();
+    const sx = t.clientX - rect.left, sy = t.clientY - rect.top;
+    mobHoldPos = { sx, sy, clientX: t.clientX, clientY: t.clientY };
+
+    // Start hold timer — fires as attack
+    mobHoldTimer = setTimeout(() => {
+      if (!mobHoldPos) return;
+      const tank = gameState?.tanks?.[myPlayerId];
+      if (!tank || !tank.alive) return;
+      const hex = screenToHex(mobHoldPos.sx, mobHoldPos.sy);
+      showHoldRing(mobHoldPos.clientX, mobHoldPos.clientY);
+      mobSetPill('FIRE', 'attack-mode');
+      setTimeout(() => {
+        sendMsg({ type: 'shoot', target_q: hex.q, target_r: hex.r });
+        hideHoldRing();
+        mobSetPill('TAP TO MOVE · HOLD TO FIRE', '');
+      }, 80);
+      mobHoldTimer = null;
+      mobHoldPos   = null;
+    }, HOLD_MS);
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  if (!isMobile()) return;
+  e.preventDefault();
+  const touches = Array.from(e.touches);
+
+  // Update stored positions
+  for (const t of Array.from(e.changedTouches)) {
+    if (mobTouches[t.identifier]) {
+      mobTouches[t.identifier].x = t.clientX;
+      mobTouches[t.identifier].y = t.clientY;
+    }
+  }
+
+  if (touches.length >= 2) {
+    const newMid  = getTouchMid(touches[0], touches[1]);
+    const newDist = getTouchDist(touches[0], touches[1]);
+
+    if (mobPinchMid && mobPinchDist) {
+      // Pan — shift camera by midpoint delta
+      const dx = (newMid.x - mobPinchMid.x) / camScale;
+      const dy = (newMid.y - mobPinchMid.y) / camScale;
+      camX -= dx; camY -= dy;
+
+      // Zoom — scale by distance ratio, anchored on midpoint
+      const rect  = canvas.getBoundingClientRect();
+      const mx    = newMid.x - rect.left;
+      const my    = newMid.y - rect.top;
+      const before = screenToWorld(mx, my);
+      camScale    = Math.max(0.3, Math.min(3.0, camScale * (newDist / mobPinchDist)));
+      const after  = screenToWorld(mx, my);
+      camX += before.x - after.x;
+      camY += before.y - after.y;
+    }
+    mobPinchMid  = newMid;
+    mobPinchDist = newDist;
+    return;
+  }
+
+  // Single finger movement — check if it's drifted too far (becomes pan)
+  if (touches.length === 1 && mobHoldPos) {
+    const t   = touches[0];
+    const dx  = t.clientX - mobHoldPos.clientX;
+    const dy  = t.clientY - mobHoldPos.clientY;
+    const d   = Math.sqrt(dx*dx + dy*dy);
+    if (d > TAP_MOVE_THRESH) {
+      // Treat as pan
+      cancelHold();
+      const wdx = dx / camScale, wdy = dy / camScale;
+      camX -= (t.clientX - (mobHoldPos.clientX)) / camScale;
+      camY -= (t.clientY - (mobHoldPos.clientY)) / camScale;
+      mobHoldPos = { ...mobHoldPos, clientX: t.clientX, clientY: t.clientY };
+    }
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  if (!isMobile()) return;
+  e.preventDefault();
+  for (const t of Array.from(e.changedTouches)) delete mobTouches[t.identifier];
+
+  const remaining = Array.from(e.touches);
+
+  if (mobPinching && remaining.length < 2) {
+    mobPinching  = false;
+    mobPinchMid  = null;
+    mobPinchDist = null;
+    // Grace window so lifting one finger doesn't fire a move
+    mobRecentPinch = true;
+    setTimeout(() => { mobRecentPinch = false; }, 180);
+    return;
+  }
+
+  // Finger lifted — if hold timer still pending, it's a tap → MOVE
+  if (mobHoldTimer !== null) {
+    clearTimeout(mobHoldTimer);
+    mobHoldTimer = null;
+    if (!mobRecentPinch && mobHoldPos) {
+      const tank = gameState?.tanks?.[myPlayerId];
+      if (tank && tank.alive) {
+        const hex = screenToHex(mobHoldPos.sx, mobHoldPos.sy);
+        const tankHex = { q: Math.round(tank.q), r: Math.round(tank.r) };
+        const path = hexPathfind(tankHex, hex);
+        if (path.length > 0) {
+          sendMsg({ type: 'move', path: path.map(h => [h.q, h.r]) });
+          mobSetPill('MOVING', 'move-mode');
+          setTimeout(() => mobSetPill('TAP TO MOVE · HOLD TO FIRE', ''), 800);
+        }
+      }
+    }
+    mobHoldPos = null;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchcancel', e => {
+  cancelHold();
+  mobPinching = false; mobPinchMid = null; mobPinchDist = null;
+  for (const t of Array.from(e.changedTouches)) delete mobTouches[t.identifier];
+}, { passive: false });
+
+// Patch updateUI to also push to mobile HUD and drawer
+const _origUpdateUI = updateUI;
+window.updateUI = function() {
+  _origUpdateUI();
+  if (!isMobile() || !gameState || !myPlayerId) return;
+  const tank = gameState.tanks[myPlayerId];
+  if (tank) mobUpdateHUD(tank);
+  if (mobDrawerOpen) mobUpdateDrawer();
+};
+
+// Init pill text on mobile
+if (isMobile()) mobSetPill('TAP TO MOVE · HOLD TO FIRE', '');
 
 init();
 </script>

@@ -8,6 +8,8 @@
 ## 📸SCREENSHOTS 
 ![screenshot1](Screenshots/Screenshot1.png)
 ![screenshot2](Screenshots/Screenshot2.png)
+![screenshot3](Screenshots/Screenshot3.png)
+![screenshot4](Screenshots/Screenshot4.png)
 
 ---
 
@@ -29,6 +31,7 @@ Every decision matters — fuel limits how far you roam, ammo limits how freely 
 - 🏆 **Live Leaderboard** — score by kills and captures, top score wins
 - 💬 **In-game chat** + kill/capture feed
 - 🔁 **Auto-rematch** vote system after each match
+- 📱 **Mobile browser support** — full gameplay on phone, no app install needed
 
 ---
 
@@ -107,13 +110,13 @@ The server only runs locally by default. To play with friends online, use [ngrok
 ngrok http 8080
 ```
 
-Share the `https://xxxx.ngrok.io` URL with your friends — they just open it in their browser, no install needed.
+Share the `https://xxxx.ngrok.io` URL with your friends — they open it in their browser and they're in. **Works on mobile too** — no app, no install, just the link.
 
 ---
 
 ## 🕹️ How to Play
 
-### Controls
+### Desktop Controls
 
 | Input | Action |
 |---|---|
@@ -126,9 +129,26 @@ Share the `https://xxxx.ngrok.io` URL with your friends — they just open it in
 | `Esc` | Cancel action / close panel |
 | `H` | Show controls hint |
 
+### 📱 Mobile Controls
+
+No app download, no setup — just open the link in your mobile browser and play. The entire game is available with a touch-native control scheme, nothing is locked behind desktop.
+
+| Gesture | Action |
+|---|---|
+| **Tap** any hex | Move your tank there |
+| **Hold** any hex (~0.4s) | Fire at that hex — a red ring confirms the shot |
+| **Two-finger drag** | Pan the camera |
+| **Pinch in / out** | Zoom |
+| **⚙️ button** | Open Upgrades |
+| **🗺️ button** | Open map, leaderboard & fort list |
+| **💬 button** | Open chat (badge shows unread messages) |
+| **⊕ button** | Center camera on your tank |
+
+> A pill at the bottom edge always shows your current action state. HP, Fuel, Ammo and Gears are pinned to the bottom of the screen at all times so resource management is never more than a glance away.
+
 ### Capturing a Fort
 
-Roll your tank onto a fort hex and **stand still**. A circular progress arc will fill around the fort — leave before it completes and progress decays. If an enemy steps on the same fort, progress stalls.
+Roll your tank onto a fort hex and **stand still**. A circular progress arc fills around the fort — leave before it completes and progress decays. If an enemy steps on the same fort, progress stalls.
 
 - Neutral fort → **5 seconds** to capture
 - Previously owned fort → **7.5 seconds** (🔒 icon shown)
@@ -159,15 +179,15 @@ Own more forts → generate more resources → upgrade faster → win.
 
 ## ⚙️ Upgrades
 
-Spend **Gears** (earned from Gear/Mixed forts) at the upgrade panel (`U`).
+Spend **Gears** (earned from Gear/Mixed forts) at the upgrade panel (`U` on desktop, ⚙️ on mobile).
 
 | Upgrade | Effect per level | Cost (Lv 1 / 2 / 3) |
 |---|---|---|
 | 🔧 Engine | +20% move speed | 5 / 10 / 18 gears |
 | 🛡️ Armor | +20 max HP | 5 / 10 / 18 gears |
-| 💥 Cannon | +10 shell damage | 5 / 10 / 18 gears |
+| 💥 Cannon | +10 shell damage + 1 range | 5 / 10 / 18 gears |
 | 📡 Sensor | +1 vision range | 5 / 10 / 18 gears |
-| 🔄 Loader | −20% ammo cost per shot | 5 / 10 / 18 gears |
+| 🔄 Loader | −2 ammo cost per shot | 5 / 10 / 18 gears |
 
 Max level is **3** for each upgrade.
 
@@ -180,10 +200,10 @@ When your tank is destroyed:
 - You **keep your 2 closest forts** — the rest go neutral and become contestable immediately
 - You lose **half your fuel** (floor: 15) and **half your ammo** (floor: 10)
 - You lose **half your gears** (no floor — can be zeroed)
-- The killer receives a portion of your stolen resources as loot
+- The killer receives a cut of your stolen resources as loot
 - You respawn after **8 seconds** at a random edge spawn
 
-> Death is a setback, not an elimination. But losing your outer forts while dead means they'll be recaptured before you're back — so dying mid-map is always costly.
+> Death is a setback, not an elimination. But losing your outer forts while dead means they'll be recaptured before you're back — dying mid-map is always costly.
 
 ---
 
