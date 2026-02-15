@@ -478,7 +478,7 @@
   /* ── FAB buttons ───────────────────────────────────────── */
   #mobile-fabs {
     display: none; position: absolute;
-    bottom: 66px; right: 12px;
+    bottom: 92px; right: 12px;
     flex-direction: column; gap: 10px; z-index: 25;
   }
   .fab-btn {
@@ -515,7 +515,7 @@
   /* ── Mode pill ──────────────────────────────────────────── */
   #mobile-mode-pill {
     display: none; position: absolute;
-    bottom: 66px; left: 50%; transform: translateX(-50%);
+    bottom: 92px; left: 50%; transform: translateX(-50%);
     background: rgba(10,12,15,0.9); border: 1px solid var(--border);
     border-radius: 20px; padding: 4px 14px;
     font-size: 0.65rem; letter-spacing: 0.15em;
@@ -617,21 +617,53 @@
   }
   #mob-chat-badge.visible { display: flex; }
 
+  /* ── Mobile controls hint bar ───────────────────────────── */
+  #mob-controls-hint {
+    display: none; position: absolute;
+    bottom: 58px; left: 0; right: 0;
+    height: 26px;
+    background: rgba(7,10,14,0.82);
+    border-top: 1px solid rgba(30,40,50,0.6);
+    z-index: 19;
+    align-items: center; justify-content: center;
+    gap: 0; flex-wrap: nowrap;
+    pointer-events: none;
+  }
+  .mob-hint-item {
+    display: flex; align-items: center; gap: 4px;
+    font-size: 0.58rem; color: var(--dim);
+    letter-spacing: 0.06em; white-space: nowrap;
+    padding: 0 6px;
+  }
+  .mob-hint-key {
+    background: var(--border);
+    border-radius: 3px;
+    padding: 1px 5px;
+    color: var(--text);
+    font-size: 0.56rem;
+    letter-spacing: 0.05em;
+    font-family: var(--font-main);
+  }
+  .mob-hint-sep {
+    color: rgba(58,69,86,0.6); font-size: 0.7rem;
+  }
+
   @media (max-width: 700px) {
-    #side-panel       { display: none !important; }
-    #keyhints         { display: none !important; }
-    #mode-indicator   { display: none !important; }
-    #mobile-hud       { display: flex; }
-    #mobile-fabs      { display: flex; }
-    #mobile-mode-pill { display: block; }
-    #canvas-container { padding-bottom: 58px; }
-    #match-timer-hud  { top: 10px; font-size: 0.85rem; padding: 3px 12px; }
-    #notifications    { top: 42px; }
-    #upgrade-panel    { width: calc(100vw - 24px); max-height: 80vh; overflow-y: auto;
-                        top: auto; bottom: 66px; left: 50%;
-                        transform: translateX(-50%) scale(0.95);
-                        transform-origin: bottom center; }
-    #upgrade-panel.open { transform: translateX(-50%) scale(1); }
+    #side-panel           { display: none !important; }
+    #keyhints             { display: none !important; }
+    #mode-indicator       { display: none !important; }
+    #mobile-hud           { display: flex; }
+    #mobile-fabs          { display: flex; }
+    #mobile-mode-pill     { display: none; } /* replaced by hint bar */
+    #mob-controls-hint    { display: flex; }
+    #canvas-container     { padding-bottom: 84px; } /* 58px HUD + 26px hint */
+    #match-timer-hud      { top: 10px; font-size: 0.85rem; padding: 3px 12px; }
+    #notifications        { top: 42px; }
+    #upgrade-panel        { width: calc(100vw - 24px); max-height: 80vh; overflow-y: auto;
+                            top: auto; bottom: 92px; left: 50%;
+                            transform: translateX(-50%) scale(0.95);
+                            transform-origin: bottom center; }
+    #upgrade-panel.open   { transform: translateX(-50%) scale(1); }
   }
 </style>
 </head>
@@ -661,10 +693,13 @@
     <div id="notifications"></div>
 
     <div id="keyhints">
-      <div class="keyhint"><kbd>U</kbd> Upgrades</div>
-      <div class="keyhint"><kbd>ESC</kbd> Cancel</div>
       <div class="keyhint"><kbd>LMB drag</kbd> Move</div>
       <div class="keyhint"><kbd>RMB drag</kbd> Attack</div>
+      <div class="keyhint"><kbd>U</kbd> Upgrades</div>
+      <div class="keyhint"><kbd>T</kbd> Chat</div>
+      <div class="keyhint"><kbd>Space</kbd> Center</div>
+      <div class="keyhint"><kbd>Scroll</kbd> Zoom</div>
+      <div class="keyhint"><kbd>ESC</kbd> Cancel</div>
     </div>
 
     <div id="dead-overlay">
@@ -687,6 +722,17 @@
         <button id="mo-vote-btn">▶ PLAY AGAIN</button>
         <div id="mo-vote-status">Waiting for votes…</div>
       </div>
+    </div>
+
+    <!-- MOBILE: controls hint bar -->
+    <div id="mob-controls-hint">
+      <span class="mob-hint-item"><span class="mob-hint-key">TAP</span> Move</span>
+      <span class="mob-hint-sep">·</span>
+      <span class="mob-hint-item"><span class="mob-hint-key">HOLD</span> Fire</span>
+      <span class="mob-hint-sep">·</span>
+      <span class="mob-hint-item"><span class="mob-hint-key">2-FINGER</span> Pan</span>
+      <span class="mob-hint-sep">·</span>
+      <span class="mob-hint-item"><span class="mob-hint-key">PINCH</span> Zoom</span>
     </div>
 
     <!-- MOBILE: bottom resource HUD -->
@@ -1797,16 +1843,26 @@ canvas.addEventListener('wheel', e => {
 // Keyboard shortcuts
 document.addEventListener('keydown', e => {
   if (!myPlayerId) return;
+  // Don't fire game shortcuts while typing in desktop chat
+  if (document.activeElement === document.getElementById('chat-input')) return;
+
   switch(e.key.toLowerCase()) {
     case 'u':
       toggleUpgrades(); break;
+    case 't':
+      e.preventDefault();
+      // focus desktop chat input
+      const ci = document.getElementById('chat-input');
+      if (ci) { ci.focus(); }
+      break;
     case 'escape':
       isDragging = false; dragPath = []; dragMode = null; setMode('idle');
       document.getElementById('upgrade-panel').classList.remove('open');
+      // also blur chat if focused
+      document.getElementById('chat-input')?.blur();
       break;
     case ' ':
       e.preventDefault();
-      // center camera on own tank
       if (gameState?.tanks?.[myPlayerId]) {
         const t = gameState.tanks[myPlayerId];
         const p = hexToPixel(t.q, t.r);
@@ -1814,7 +1870,7 @@ document.addEventListener('keydown', e => {
       }
       break;
     case 'h':
-      notify('IRON FOG Controls: LMB drag=Move, RMB drag=Attack, U=Upgrades, SPACE=Center');
+      notify('Controls: LMB=Move  RMB=Attack  U=Upgrades  T=Chat  SPACE=Center');
       break;
   }
 });
