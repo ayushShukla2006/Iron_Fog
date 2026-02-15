@@ -8,8 +8,8 @@
 ## 📸SCREENSHOTS 
 ![screenshot1](Screenshots/Screenshot1.png)
 ![screenshot2](Screenshots/Screenshot2.png)
-![screenshot3](Screenshots/Screenshot3.jpeg)
-![screenshot4](Screenshots/Screenshot4.jpeg)
+![screenshot3](Screenshots/Screenshot3.png)
+![screenshot4](Screenshots/Screenshot4.png)
 
 ---
 
