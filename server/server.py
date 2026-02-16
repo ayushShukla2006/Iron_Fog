@@ -57,7 +57,7 @@ UPGRADE_COSTS   = {
     "armor":   {"gears": 5,  "desc": "+20 max HP"},
     "cannon":  {"gears": 5,  "desc": "+10 shell damage"},
     "sensor":  {"gears": 5,  "desc": "+1 vision range"},
-    "loader":  {"gears": 5,  "desc": "-20% ammo cost"},
+    "loader":  {"gears": 5,  "desc": "-2 ammo cost per shot"},
 }
 # Cost scales per level: Lv1=5, Lv2=10, Lv3=18
 
@@ -191,6 +191,9 @@ class Tank:
     upgrades: Dict           = field(default_factory=dict)
     last_shot: float = 0.0
     score: int               = 0
+    kills: int               = 0
+    deaths: int              = 0
+    fort_captures: int       = 0
 
 
 
@@ -236,6 +239,9 @@ class GameState:
             tank.path = []
             tank.upgrades = {}
             tank.score = 0
+            tank.kills = 0
+            tank.deaths = 0
+            tank.fort_captures = 0
 
         # Reset forts
         for fort in self.forts.values():
@@ -251,6 +257,7 @@ class GameState:
         # Reset match state
         self.match_timer = MATCH_TIME
         self.match_over = False
+        self.rematch_votes.clear()
 
     def __init__(self):
         self.players: Dict[str, dict]   = {}   # ws_id -> player info
@@ -266,6 +273,7 @@ class GameState:
         self.match_over = False
         self.post_match_timer = 0.0
         self.pending_events: List[dict] = []  # kill/capture feed events
+        self.rematch_votes: set = set()       # player_ids who voted to rematch
 
 
     def _generate_forts(self):
@@ -384,8 +392,19 @@ class GameState:
         elif upgrade_type == "sensor":
             tank.vision += 1
         elif upgrade_type == "loader":
-            tank.ammo_cost = max(5, tank.ammo_cost - 3)
+            tank.ammo_cost = max(2, tank.ammo_cost - 2)  # 8→6→4→2, all 3 levels meaningful
         return {"ok": True, "upgrade": upgrade_type, "level": lvl, "max_level": UPGRADE_MAX_LVL}
+
+    def cast_vote(self, player_id: str) -> dict:
+        if not self.match_over:
+            return {"error": "match not over"}
+        self.rematch_votes.add(player_id)
+        total = len(self.tanks)
+        cast  = len(self.rematch_votes)
+        # If all players voted, start new match immediately
+        if cast >= total and total > 0:
+            self._reset_match()
+        return {"ok": True, "voted": cast, "total": total}
 
     def tick_update(self, dt: float):
 
@@ -470,6 +489,8 @@ class GameState:
                     shooter = self.tanks.get(shell.owner_id)
                     if shooter:
                         shooter.score += 10
+                        shooter.kills += 1
+                        tank.deaths += 1
 
                         # ── Resource loot: victim loses half of fuel, ammo, gears ──
                         fuel_lost = tank.fuel * 0.5 if tank.fuel * 0.5 >= LOOT_FUEL_FLOOR else max(0, tank.fuel - LOOT_FUEL_FLOOR)
@@ -480,11 +501,9 @@ class GameState:
                         tank.ammo  = max(LOOT_AMMO_FLOOR,  tank.ammo  - ammo_lost)
                         tank.gears = max(LOOT_GEAR_FLOOR,  tank.gears - gear_lost)
 
-                        # Killer gets the stolen resources (gears: 5 to half of what was lost)
+                        # Killer gets gears only — fuel/ammo penalty stays with victim, nothing transfers
                         gear_gained = random.uniform(5, max(5, gear_lost))
-                        shooter.fuel  = min(120, shooter.fuel  + fuel_lost  * 0.5)   # killer gets half of stolen fuel
-                        shooter.ammo  = min(100, shooter.ammo  + ammo_lost  * 0.5)   # killer gets half of stolen ammo
-                        shooter.gears = min(99,  shooter.gears + gear_gained)
+                        shooter.gears = min(99, shooter.gears + gear_gained)
 
                         # ── Fort release on death: keep only FORT_RELEASE_KEEP forts ──
                         victim_forts = [f for f in self.forts.values() if f.owner == pid]
@@ -547,6 +566,7 @@ class GameState:
                             fort.capturing_player = None
                             # score
                             self.tanks[capturer].score += 5
+                            self.tanks[capturer].fort_captures += 1
                             # capture feed event
                             cap_info = next((p for p in self.players.values() if p["id"]==capturer), None)
                             self.pending_events.append({
@@ -635,10 +655,23 @@ class GameState:
         # leaderboard
         scores = [
             {"pid": pid, "name": next((p["name"] for p in self.players.values() if p["id"]==pid), pid),
-             "score": t.score, "color": t.color, "forts": sum(1 for f in self.forts.values() if f.owner==pid)}
+             "score": t.score, "color": t.color,
+             "forts": sum(1 for f in self.forts.values() if f.owner==pid),
+             "kills": t.kills, "deaths": t.deaths, "captures": t.fort_captures}
             for pid, t in self.tanks.items()
         ]
         scores.sort(key=lambda x: x["score"], reverse=True)
+
+        # votes state for match over screen
+        votes_data = {
+            "cast":     len(self.rematch_votes),
+            "total":    len(self.tanks),
+            "voted_pids": list(self.rematch_votes),
+            "my_voted": player_id in self.rematch_votes,
+        }
+
+        # winner info (top scorer)
+        winner = scores[0] if scores else None
 
         return {
             "type": "state",
@@ -652,7 +685,10 @@ class GameState:
             "map_radius": MAP_RADIUS,
             "match_timer": self.match_timer,
             "match_over": self.match_over,
-
+            "post_match_timer": self.post_match_timer,
+            "votes": votes_data,
+            "winner_name":  winner["name"]  if winner and self.match_over else None,
+            "winner_color": winner["color"] if winner and self.match_over else None,
         }
 
 

@@ -108,11 +108,13 @@
   canvas#game-canvas {
     display: block; width: 100%; height: 100%;
     cursor: crosshair;
+    will-change: contents;
+    touch-action: none;
   }
 
   /* ── RIGHT PANEL ──────────────────────────────────────── */
   #side-panel {
-    width: 240px;
+    width: 220px;
     background: var(--panel);
     border-left: 1px solid var(--border);
     display: flex; flex-direction: column;
@@ -122,16 +124,16 @@
 
   .panel-section {
     border-bottom: 1px solid var(--border);
-    padding: 12px 14px;
+    padding: 8px 12px;
   }
 
   .panel-title {
     font-family: var(--font-head);
-    font-size: 0.7rem;
-    letter-spacing: 0.2em;
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
     color: var(--dim);
     text-transform: uppercase;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
   }
 
   /* ── RESOURCE BARS ────────────────────────────────────── */
@@ -165,9 +167,11 @@
 
   /* ── MINIMAP ──────────────────────────────────────────── */
   #minimap-canvas {
-    width: 210px; height: 210px;
+    width: 158px; height: 158px;
     border: 1px solid var(--border);
     border-radius: 2px;
+    display: block;
+    margin: 0 auto;
   }
 
   /* ── LEADERBOARD ──────────────────────────────────────── */
@@ -367,11 +371,30 @@
   .mo-lb-rank.bronze { color: #e67e22; }
   .mo-lb-color { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
   .mo-lb-name  { flex:1; color: var(--text); }
+  .mo-lb-kd    { color: var(--dim); font-size: 0.68rem; min-width: 48px; text-align:right; }
+  .mo-lb-caps  { color: var(--dim); font-size: 0.68rem; min-width: 32px; text-align:right; }
   .mo-lb-forts { color: var(--dim); font-size: 0.7rem; }
   .mo-lb-score { color: var(--accent); font-family: var(--font-head); font-size: 1rem; min-width:40px; text-align:right; }
-  #mo-vote-section {
-    display: flex; flex-direction: column; align-items: center; gap: 10px;
+  .mo-lb-vote-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: var(--border); flex-shrink: 0;
+    transition: background 0.3s;
   }
+  .mo-lb-vote-dot.voted { background: var(--green); box-shadow: 0 0 6px rgba(46,204,113,0.6); }
+
+  #mo-vote-section {
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+  }
+
+  /* Rematch countdown */
+  #mo-rematch-timer {
+    font-family: var(--font-head);
+    font-size: 0.8rem; letter-spacing: 0.2em;
+    color: var(--dim); text-transform: uppercase;
+    margin-top: 4px;
+  }
+  #mo-rematch-timer.urgent { color: var(--red); }
+
   #mo-vote-btn {
     background: var(--accent);
     border: none; border-radius: 2px;
@@ -385,7 +408,8 @@
     transition: background 0.15s, transform 0.1s, opacity 0.2s;
   }
   #mo-vote-btn:hover:not(:disabled) { background: #dbb85e; transform: scale(1.03); }
-  #mo-vote-btn:disabled { opacity: 0.45; cursor: default; transform: none; }
+  #mo-vote-btn:disabled { opacity: 0.55; cursor: default; transform: none;
+    background: var(--border); color: var(--green); }
   #mo-vote-status {
     font-size: 0.75rem;
     letter-spacing: 0.15em;
@@ -411,10 +435,49 @@
   #match-timer-hud.urgent { color: var(--red); border-color: var(--red); }
 
   /* ── SCROLL PANEL ─────────────────────────────────────── */
-  #lb-scroll { overflow-y: auto; padding: 12px 14px; }
-  #lb-scroll::-webkit-scrollbar { width: 4px; }
-  #lb-scroll::-webkit-scrollbar-track { background: var(--bg); }
-  #lb-scroll::-webkit-scrollbar-thumb { background: var(--border); }
+  #lb-scroll { display: none; } /* leaderboard moved to game canvas overlay */
+
+  /* ── IN-GAME LEADERBOARD OVERLAY (bottom-left of canvas, desktop only) ── */
+  #game-hud-lb {
+    position: absolute; bottom: 14px; left: 14px;
+    background: rgba(7,10,14,0.82);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 8px 10px;
+    min-width: 170px;
+    max-width: 220px;
+    pointer-events: none;
+    z-index: 10;
+    backdrop-filter: blur(4px);
+  }
+  #game-hud-lb .hud-lb-title {
+    font-family: var(--font-head);
+    font-size: 0.58rem; letter-spacing: 0.2em;
+    color: var(--dim); text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 5px; margin-bottom: 6px;
+  }
+  .hud-lb-row {
+    display: flex; align-items: center;
+    gap: 6px; margin-bottom: 4px;
+    font-size: 0.68rem;
+  }
+  .hud-lb-row:last-child { margin-bottom: 0; }
+  .hud-lb-color { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .hud-lb-name  { flex: 1; color: var(--text); overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .hud-lb-forts { color: var(--dim); font-size: 0.62rem; }
+  .hud-lb-score { color: var(--accent); font-family: var(--font-head); font-size: 0.8rem; min-width: 24px; text-align: right; }
+  /* Fort list below leaderboard */
+  #game-hud-forts {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid var(--border);
+  }
+  #game-hud-forts .hud-lb-title { border: none; padding: 0; margin-bottom: 4px; }
+  .hud-fort-row {
+    font-size: 0.62rem; color: var(--dim);
+    margin-bottom: 2px; letter-spacing: 0.04em;
+  }
 
   /* ── CHAT ─────────────────────────────────────────────── */
   #chat-section {
@@ -423,9 +486,9 @@
     flex-shrink: 0;
   }
   #chat-messages {
-    overflow-y: auto; padding: 6px 10px;
-    display: flex; flex-direction: column; gap: 3px;
-    height: 160px;
+    overflow-y: auto; padding: 5px 10px;
+    display: flex; flex-direction: column; gap: 2px;
+    height: 110px;
   }
   #chat-messages::-webkit-scrollbar { width: 3px; }
   #chat-messages::-webkit-scrollbar-thumb { background: var(--border); }
@@ -652,6 +715,7 @@
     #side-panel           { display: none !important; }
     #keyhints             { display: none !important; }
     #mode-indicator       { display: none !important; }
+    #game-hud-lb          { display: none !important; }
     #mobile-hud           { display: flex; }
     #mobile-fabs          { display: flex; }
     #mobile-mode-pill     { display: none; } /* replaced by hint bar */
@@ -695,10 +759,11 @@
     <div id="keyhints">
       <div class="keyhint"><kbd>LMB drag</kbd> Move</div>
       <div class="keyhint"><kbd>RMB drag</kbd> Attack</div>
+      <div class="keyhint"><kbd>MMB drag</kbd> Pan</div>
+      <div class="keyhint"><kbd>Scroll</kbd> Zoom</div>
       <div class="keyhint"><kbd>U</kbd> Upgrades</div>
       <div class="keyhint"><kbd>T</kbd> Chat</div>
       <div class="keyhint"><kbd>Space</kbd> Center</div>
-      <div class="keyhint"><kbd>Scroll</kbd> Zoom</div>
       <div class="keyhint"><kbd>ESC</kbd> Cancel</div>
     </div>
 
@@ -710,17 +775,31 @@
     <!-- MATCH TIMER -->
     <div id="match-timer-hud">10:00</div>
 
+    <!-- DESKTOP: leaderboard + forts overlay (bottom-left of game area) -->
+    <div id="game-hud-lb">
+      <div class="hud-lb-title">Leaderboard</div>
+      <div id="game-lb-rows"></div>
+      <div id="game-hud-forts">
+        <div class="hud-lb-title">My Forts</div>
+        <div id="game-fort-rows"></div>
+      </div>
+    </div>
+
     <!-- MATCH OVER -->
     <div id="match-over-overlay">
       <div class="mo-title">MATCH OVER</div>
       <div class="mo-winner" id="mo-winner-line">Victory — <span id="mo-winner-name"></span></div>
       <div id="mo-leaderboard">
-        <div class="mo-lb-header">Final Standings</div>
+        <div class="mo-lb-header">
+          <span>Final Standings</span>
+          <span style="float:right;font-size:0.6rem;color:var(--dim);letter-spacing:0.15em;">K/D &nbsp; CAPS &nbsp; SCORE</span>
+        </div>
         <div id="mo-lb-rows"></div>
       </div>
       <div id="mo-vote-section">
         <button id="mo-vote-btn">▶ PLAY AGAIN</button>
         <div id="mo-vote-status">Waiting for votes…</div>
+        <div id="mo-rematch-timer"></div>
       </div>
     </div>
 
@@ -776,9 +855,9 @@
 
   <!-- SIDE PANEL (desktop) -->
   <div id="side-panel">
-    <div class="panel-section" style="background:#070a0d; padding:14px;">
-      <div style="font-family:var(--font-head);font-size:1.1rem;letter-spacing:0.2em;color:var(--accent);">IRON FOG</div>
-      <div id="player-name" style="font-size:0.7rem;color:var(--dim);margin-top:2px;"></div>
+    <div class="panel-section" style="background:#070a0d; padding:8px 12px;">
+      <div style="font-family:var(--font-head);font-size:0.85rem;letter-spacing:0.22em;color:var(--accent);">IRON FOG</div>
+      <div id="player-name" style="font-size:0.65rem;color:var(--dim);margin-top:1px;"></div>
     </div>
 
     <div class="panel-section">
@@ -808,14 +887,6 @@
     <div class="panel-section">
       <div class="panel-title">Minimap</div>
       <canvas id="minimap-canvas" width="210" height="210"></canvas>
-    </div>
-
-    <div id="lb-scroll">
-      <div class="panel-title">Leaderboard</div>
-      <div id="leaderboard"></div>
-
-      <div class="panel-title" style="margin-top:14px;">Forts</div>
-      <div id="fort-info" style="font-size:0.7rem;color:var(--dim);line-height:1.8;"></div>
     </div>
 
     <!-- CHAT (desktop) -->
@@ -1021,39 +1092,37 @@ function screenToHex(sx, sy) {
 }
 
 // ── Draw Hex ─────────────────────────────────────────────────────────────────
-// Flat-top hex: corner angles start at 0° (right), step 60°
-function hexPath(cx, cy, size) {
-  const path = new Path2D();
-  for (let i = 0; i < 6; i++) {
-    const a = (Math.PI / 3) * i;   // 0°, 60°, 120°, 180°, 240°, 300° — flat-top
-    const x = cx + size * Math.cos(a);
-    const y = cy + size * Math.sin(a);
-    if (i === 0) path.moveTo(x, y); else path.lineTo(x, y);
-  }
-  path.closePath();
-  return path;
+// Pre-computed unit hex corners (flat-top, radius=1) — reused every frame
+const UNIT_HEX_COS = [], UNIT_HEX_SIN = [];
+for (let i = 0; i < 6; i++) {
+  UNIT_HEX_COS.push(Math.cos((Math.PI / 3) * i));
+  UNIT_HEX_SIN.push(Math.sin((Math.PI / 3) * i));
 }
 
+// Draw a hex using ctx directly — no Path2D allocation per frame
 function drawHex(q, r, fillColor, strokeColor, alpha=1, size=null) {
-  const s = size || HEX_SIZE;
-  const p = hexToPixel(q, r);
+  const s  = (size || HEX_SIZE) * camScale;
+  if (s < 2) return;
+  const p  = hexToPixel(q, r);
   const sc = worldToScreen(p.x, p.y);
-  const drawSize = s * camScale;
-  if (drawSize < 2) return;
-  // Use a 1px inset purely for the stroke gap — fill uses full size
-  const fillPath   = hexPath(sc.x, sc.y, drawSize);
-  const strokePath = hexPath(sc.x, sc.y, drawSize - 0.5);
   ctx.globalAlpha = alpha;
-  if (fillColor) {
-    ctx.fillStyle = fillColor;
-    ctx.fill(fillPath);
-  }
-  if (strokeColor) {
-    ctx.strokeStyle = strokeColor;
-    ctx.lineWidth = 1;
-    ctx.stroke(strokePath);
-  }
+  ctx.beginPath();
+  ctx.moveTo(sc.x + s * UNIT_HEX_COS[0], sc.y + s * UNIT_HEX_SIN[0]);
+  for (let i = 1; i < 6; i++) ctx.lineTo(sc.x + s * UNIT_HEX_COS[i], sc.y + s * UNIT_HEX_SIN[i]);
+  ctx.closePath();
+  if (fillColor)   { ctx.fillStyle   = fillColor;   ctx.fill(); }
+  if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = 1; ctx.stroke(); }
   ctx.globalAlpha = 1;
+}
+
+// Draw hex at already-computed screen position — avoids redundant hexToPixel+worldToScreen
+function drawHexAt(scx, scy, s, fillColor, strokeColor) {
+  ctx.beginPath();
+  ctx.moveTo(scx + s * UNIT_HEX_COS[0], scy + s * UNIT_HEX_SIN[0]);
+  for (let i = 1; i < 6; i++) ctx.lineTo(scx + s * UNIT_HEX_COS[i], scy + s * UNIT_HEX_SIN[i]);
+  ctx.closePath();
+  if (fillColor)   { ctx.fillStyle   = fillColor;   ctx.fill(); }
+  if (strokeColor) { ctx.strokeStyle = strokeColor; ctx.lineWidth = 1; ctx.stroke(); }
 }
 
 // ── Fort colors ──────────────────────────────────────────────────────────────
@@ -1070,23 +1139,40 @@ function render() {
   ctx.fillStyle = '#0a0c0f';
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  if (!gameState) {
-    requestAnimationFrame(render);
-    return;
+  if (!gameState) { requestAnimationFrame(render); return; }
+
+  const myTank     = gameState.tanks[myPlayerId];
+  const visibleSet = new Set(gameState.visible_hexes.map(h => `${h[0]},${h[1]}`));
+
+  // Pre-cache hex screen positions for this frame — computed once, reused for grid + forts + tanks
+  const hexScreenPos = new Map();
+  const s = HEX_SIZE * camScale;
+  for (let dq = -MAP_RADIUS; dq <= MAP_RADIUS; dq++) {
+    for (let dr = Math.max(-MAP_RADIUS, -dq-MAP_RADIUS); dr <= Math.min(MAP_RADIUS, -dq+MAP_RADIUS); dr++) {
+      const p = hexToPixel(dq, dr);
+      hexScreenPos.set(`${dq},${dr}`, worldToScreen(p.x, p.y));
+    }
   }
 
-  const myTank = gameState.tanks[myPlayerId];
-  const visibleSet = new Set(gameState.visible_hexes.map(h=>`${h[0]},${h[1]}`));
+  // ── Draw base hex grid + fog in ONE pass ──────────────────────────────────
+  // Visible hex colours
+  const FILL_VIS  = '#0d1117', STROKE_VIS  = '#1e2832';
+  const FILL_FOG  = '#070a0e', STROKE_FOG  = '#0f1318';
+  const FOG_OVERLAY = 'rgba(8,12,18,0.72)';
 
-  // ── Draw base hex grid ────────────────────────────────────────────────────
-  for (let dq=-MAP_RADIUS; dq<=MAP_RADIUS; dq++) {
-    for (let dr=Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr<=Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
+  ctx.lineWidth = 1;
+  for (let dq = -MAP_RADIUS; dq <= MAP_RADIUS; dq++) {
+    for (let dr = Math.max(-MAP_RADIUS, -dq-MAP_RADIUS); dr <= Math.min(MAP_RADIUS, -dq+MAP_RADIUS); dr++) {
       const key = `${dq},${dr}`;
-      const visible = visibleSet.has(key);
-      if (visible) {
-        drawHex(dq, dr, '#0d1117', '#1e2832', 1);
-      } else {
-        drawHex(dq, dr, '#070a0e', '#0f1318', 0.7);
+      const sc  = hexScreenPos.get(key);
+      if (!sc) continue;
+      const vis = visibleSet.has(key);
+      // Base tile
+      drawHexAt(sc.x, sc.y, s, vis ? FILL_VIS : FILL_FOG, vis ? STROKE_VIS : STROKE_FOG);
+      // Fog overlay — drawn in same pass, no second loop
+      if (!vis) {
+        ctx.fillStyle = FOG_OVERLAY;
+        ctx.fill(); // reuses the path still in ctx from drawHexAt
       }
     }
   }
@@ -1096,106 +1182,76 @@ function render() {
     for (const h of dragPath) {
       drawHex(h.q, h.r, 'rgba(46,204,113,0.18)', '#2ecc71', 0.9);
     }
-    // draw line from tank to cursor
     if (myTank) {
       const startPx = hexToPixel(myTank.q, myTank.r);
       const ss = worldToScreen(startPx.x, startPx.y);
       const endH = dragPath[dragPath.length-1];
       const endPx = hexToPixel(endH.q, endH.r);
       const es = worldToScreen(endPx.x, endPx.y);
-      ctx.beginPath();
-      ctx.moveTo(ss.x, ss.y);
-      ctx.lineTo(es.x, es.y);
-      ctx.strokeStyle = 'rgba(46,204,113,0.5)';
-      ctx.lineWidth = 2;
-      ctx.setLineDash([6,4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(ss.x, ss.y); ctx.lineTo(es.x, es.y);
+      ctx.strokeStyle = 'rgba(46,204,113,0.5)'; ctx.lineWidth = 2;
+      ctx.setLineDash([6,4]); ctx.stroke(); ctx.setLineDash([]);
     }
   }
-
   if (isDragging && dragMode === 'attack' && dragCurrent) {
-    // draw attack reticle
     drawHex(dragCurrent.q, dragCurrent.r, 'rgba(231,76,60,0.25)', '#e74c3c', 0.9);
     if (myTank) {
       const startPx = hexToPixel(myTank.q, myTank.r);
       const ss = worldToScreen(startPx.x, startPx.y);
       const endPx = hexToPixel(dragCurrent.q, dragCurrent.r);
       const es = worldToScreen(endPx.x, endPx.y);
-      ctx.beginPath();
-      ctx.moveTo(ss.x, ss.y);
-      ctx.lineTo(es.x, es.y);
-      ctx.strokeStyle = 'rgba(231,76,60,0.7)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([4,3]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.beginPath(); ctx.moveTo(ss.x, ss.y); ctx.lineTo(es.x, es.y);
+      ctx.strokeStyle = 'rgba(231,76,60,0.7)'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([4,3]); ctx.stroke(); ctx.setLineDash([]);
     }
   }
 
   // ── Draw forts ────────────────────────────────────────────────────────────
   for (const [fid, fort] of Object.entries(gameState.forts)) {
     const key = `${fort.q},${fort.r}`;
-    const visible = visibleSet.has(key);
-    if (!visible && fort.owner !== myPlayerId) continue;
+    if (!visibleSet.has(key) && fort.owner !== myPlayerId) continue;
+
+    // Use cached screen position if available, otherwise compute
+    let sc = hexScreenPos.get(key);
+    if (!sc) { const p = hexToPixel(fort.q, fort.r); sc = worldToScreen(p.x, p.y); }
 
     const baseColor = FORT_COLORS[fort.ftype] || '#8e44ad';
     const owned = fort.owner ? baseColor : '#1e2832';
-    drawHex(fort.q, fort.r, owned+'22', baseColor, 0.85);
+    drawHexAt(sc.x, sc.y, s, owned + '22', baseColor);
 
     // capture progress arc
     if (fort.capture_progress > 0 && fort.capturing_player) {
-      const p = hexToPixel(fort.q, fort.r);
-      const sc = worldToScreen(p.x, p.y);
       const capColor = fort.capturing_player === myPlayerId ? '#2ecc71' : '#e74c3c';
-
-      // Match server: recaptured forts (was_owned) take 1.5x longer
-      const CAPTURE_TIME = 5.0;
-      const RECAPTURE_MULTIPLIER = 1.5;
+      const CAPTURE_TIME = 5.0, RECAPTURE_MULTIPLIER = 1.5;
       const effectiveCaptureTime = CAPTURE_TIME * (fort.was_owned ? RECAPTURE_MULTIPLIER : 1.0);
       const progress = Math.min(fort.capture_progress / effectiveCaptureTime, 1.0);
-
-      // Background ring (shows total time remaining)
-      ctx.beginPath();
-      ctx.arc(sc.x, sc.y, HEX_SIZE * camScale * 0.55, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+      const arcR = HEX_SIZE * camScale * 0.55;
       ctx.lineWidth = 3 * camScale;
-      ctx.stroke();
-
-      // Filled arc showing actual progress
       ctx.beginPath();
-      ctx.arc(sc.x, sc.y, HEX_SIZE * camScale * 0.55,
-        -Math.PI / 2,
-        -Math.PI / 2 + progress * Math.PI * 2);
-      ctx.strokeStyle = capColor;
-      ctx.lineWidth = 3 * camScale;
-      ctx.stroke();
-
-      // Show a small lock icon / indicator on recapture forts so player knows it's slower
+      ctx.arc(sc.x, sc.y, arcR, 0, Math.PI * 2);
+      ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(sc.x, sc.y, arcR, -Math.PI/2, -Math.PI/2 + progress * Math.PI * 2);
+      ctx.strokeStyle = capColor; ctx.stroke();
       if (fort.was_owned && camScale > 0.5) {
-        ctx.font = `${Math.max(8, 10 * camScale)}px serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
+        ctx.font = `${Math.max(8, 10*camScale)}px serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.globalAlpha = 0.7;
-        ctx.fillText('🔒', sc.x + HEX_SIZE * camScale * 0.5, sc.y - HEX_SIZE * camScale * 0.5);
+        ctx.fillText('🔒', sc.x + HEX_SIZE*camScale*0.5, sc.y - HEX_SIZE*camScale*0.5);
         ctx.globalAlpha = 1;
       }
     }
 
     // fort icon
-    const p = hexToPixel(fort.q, fort.r);
-    const sc = worldToScreen(p.x, p.y);
     const iconSize = Math.max(10, HEX_SIZE * camScale * 0.9);
-    ctx.font = `${iconSize}px serif`;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
     const img = assets['fort_' + fort.ftype];
     if (img) {
       ctx.drawImage(img, sc.x - iconSize/2, sc.y - iconSize/2, iconSize, iconSize);
     } else {
+      ctx.font = `${iconSize}px serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
       ctx.fillText('🏛', sc.x, sc.y);
     }
-
 
     // owner dot
     if (fort.owner && gameState.tanks[fort.owner]) {
@@ -1206,19 +1262,14 @@ function render() {
     }
   }
 
-  // ── Draw fog overlay ──────────────────────────────────────────────────────
-  for (let dq=-MAP_RADIUS; dq<=MAP_RADIUS; dq++) {
-    for (let dr=Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr<=Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
-      if (!visibleSet.has(`${dq},${dr}`)) {
-        drawHex(dq, dr, 'rgba(8,12,18,0.72)', null, 1);
-      }
-    }
-  }
-
   // ── Draw tanks ────────────────────────────────────────────────────────────
+  // Build name lookup once — avoids leaderboard.find() inside the loop
+  const nameMap = {};
+  for (const l of (gameState.leaderboard || [])) nameMap[l.pid] = l.name;
+
   for (const [pid, tank] of Object.entries(gameState.tanks)) {
     if (!tank.alive) continue;
-    const p = hexToPixel(tank.q, tank.r);
+    const p  = hexToPixel(tank.q, tank.r);
     const sc = worldToScreen(p.x, p.y);
     const ts = HEX_SIZE * camScale * 0.5;
 
@@ -1228,7 +1279,6 @@ function render() {
     ctx.ellipse(sc.x, sc.y + ts*0.3, ts*0.7, ts*0.22, 0, 0, Math.PI*2);
     ctx.fill();
 
-    // Try to draw asset, fallback to shape
     const assetKey = pid === myPlayerId ? 'tank_self' : 'tank_enemy';
     const img = assets[assetKey];
     ctx.save();
@@ -1237,22 +1287,11 @@ function render() {
     if (img) {
       ctx.drawImage(img, -ts, -ts, ts*2, ts*2);
     } else {
-      // draw tank shape programmatically
       const c = tank.color || '#e74c3c';
-      // body
       ctx.fillStyle = c;
-      ctx.beginPath();
-      ctx.roundRect(-ts*0.4, -ts*0.55, ts*0.8, ts*1.1, ts*0.08);
-      ctx.fill();
-      // turret
-      ctx.fillStyle = c;
-      ctx.beginPath();
-      ctx.arc(0, 0, ts*0.28, 0, Math.PI*2);
-      ctx.fill();
-      // barrel
-      ctx.fillStyle = '#222';
-      ctx.fillRect(-ts*0.065, -ts*0.65, ts*0.13, ts*0.55);
-      // tracks
+      ctx.beginPath(); ctx.roundRect(-ts*0.4, -ts*0.55, ts*0.8, ts*1.1, ts*0.08); ctx.fill();
+      ctx.beginPath(); ctx.arc(0, 0, ts*0.28, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#222'; ctx.fillRect(-ts*0.065, -ts*0.65, ts*0.13, ts*0.55);
       ctx.fillStyle = '#1a1a1a';
       ctx.fillRect(-ts*0.5, -ts*0.55, ts*0.13, ts*1.1);
       ctx.fillRect( ts*0.37, -ts*0.55, ts*0.13, ts*1.1);
@@ -1260,7 +1299,7 @@ function render() {
     ctx.restore();
 
     // HP bar
-    if (tank.alive && tank.hp < tank.max_hp) {
+    if (tank.hp < tank.max_hp) {
       const bw = ts*1.4;
       ctx.fillStyle = '#1a1a1a';
       ctx.fillRect(sc.x - bw/2, sc.y - ts - 8*camScale, bw, 4*camScale);
@@ -1270,43 +1309,32 @@ function render() {
 
     // name tag
     if (camScale > 0.6) {
-      ctx.fillStyle = pid===myPlayerId ? '#fff' : tank.color;
+      ctx.fillStyle = pid === myPlayerId ? '#fff' : tank.color;
       ctx.font = `${Math.max(9, 11*camScale)}px 'Share Tech Mono'`;
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'bottom';
-      const nameText = pid===myPlayerId ? '▶ YOU' : (gameState.leaderboard.find(l=>l.pid===pid)||{}).name||'?';
-      ctx.fillText(nameText, sc.x, sc.y - ts - 10*camScale);
+      ctx.textAlign = 'center'; ctx.textBaseline = 'bottom';
+      ctx.fillText(pid === myPlayerId ? '▶ YOU' : (nameMap[pid] || '?'), sc.x, sc.y - ts - 10*camScale);
     }
 
     // movement path line
     if (pid === myPlayerId && tank.path && tank.path.length > 0) {
-      ctx.beginPath();
-      ctx.moveTo(sc.x, sc.y);
+      ctx.beginPath(); ctx.moveTo(sc.x, sc.y);
       for (const [pq, pr] of tank.path) {
         const pp = hexToPixel(pq, pr);
         const ps = worldToScreen(pp.x, pp.y);
         ctx.lineTo(ps.x, ps.y);
       }
-      ctx.strokeStyle = 'rgba(46,204,113,0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([5,4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      ctx.strokeStyle = 'rgba(46,204,113,0.35)'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([5,4]); ctx.stroke(); ctx.setLineDash([]);
     }
   }
 
   // ── Draw shells ───────────────────────────────────────────────────────────
   for (const [sid, shell] of Object.entries(gameState.shells)) {
-    const p = hexToPixel(shell.q, shell.r);
+    const p  = hexToPixel(shell.q, shell.r);
     const sc = worldToScreen(p.x, p.y);
-    const r = 5 * camScale;
-
+    const r  = 5 * camScale;
     ctx.fillStyle = '#f1c40f';
-    ctx.beginPath();
-    ctx.arc(sc.x, sc.y, r, 0, Math.PI*2);
-    ctx.fill();
-
-    // trail
+    ctx.beginPath(); ctx.arc(sc.x, sc.y, r, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = 'rgba(241,196,15,0.3)';
     ctx.beginPath();
     ctx.arc(sc.x - (shell.target_q-shell.q)*0.15*HEX_SIZE*camScale,
@@ -1317,84 +1345,102 @@ function render() {
 
   // ── Particles ─────────────────────────────────────────────────────────────
   const now = performance.now();
-  const dt = Math.min(0.05, (now - lastParticleTime) / 1000);
+  const dt  = Math.min(0.05, (now - lastParticleTime) / 1000);
   lastParticleTime = now;
 
   if (gameState) {
     for (const [sid, ps] of Object.entries(prevShells)) {
       if (!gameState.shells[sid]) {
         const ipx = hexToPixel(ps.target_q, ps.target_r);
-        spawnExplosion(ipx.x, ipx.y, '#f39c12', 22);
+        spawnExplosion(ipx.x, ipx.y, '#f39c12', isMobile() ? 10 : 22);
       }
     }
     prevShells = {};
-    for (const [sid, s] of Object.entries(gameState.shells)) {
-      prevShells[sid] = s;
-    }
+    for (const [sid, s] of Object.entries(gameState.shells)) prevShells[sid] = s;
   }
 
   updateParticles(dt);
   drawParticles();
 
-  // ── Minimap ───────────────────────────────────────────────────────────────
-  renderMinimap(visibleSet);
+  // ── Minimap (desktop only — throttled to state updates) ───────────────────
+  if (!isMobile()) renderMinimap(visibleSet);
 
   requestAnimationFrame(render);
 }
 
+// Minimap dirty flag — only redraw when game state changes, not every frame
+let minimapDirty = false;
+// Pre-computed minimap hex positions — built once, reused
+let minimapHexCache = null;
+
+function buildMinimapCache(W) {
+  const S  = W / (MAP_RADIUS * 2.2) / 1.73;
+  const cx = W/2, cy = W/2;
+  minimapHexCache = { S, hexes: [] };
+  for (let dq = -MAP_RADIUS; dq <= MAP_RADIUS; dq++) {
+    for (let dr = Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr <= Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
+      const x = cx + S*(3/2*dq);
+      const y = cy + S*(Math.sqrt(3)/2*dq + Math.sqrt(3)*dr);
+      // Pre-compute the 6 corner offsets
+      const corners = [];
+      for (let i = 0; i < 6; i++) {
+        corners.push([(S-0.5)*Math.cos((Math.PI/3)*i), (S-0.5)*Math.sin((Math.PI/3)*i)]);
+      }
+      minimapHexCache.hexes.push({ q: dq, r: dr, x, y, corners, key: `${dq},${dr}` });
+    }
+  }
+}
+
 function renderMinimap(visibleSet) {
+  if (!minimapDirty) return;
+  minimapDirty = false;
   const W = minimap.width, H = minimap.height;
+  if (!minimapHexCache || minimapHexCache.S !== W / (MAP_RADIUS*2.2) / 1.73) buildMinimapCache(W);
+  const { S, hexes } = minimapHexCache;
+
   mctx.fillStyle = '#060910';
   mctx.fillRect(0, 0, W, H);
 
-  const S = W / (MAP_RADIUS*2.2) / 1.73;
-  const cx = W/2, cy = H/2;
-
-  function mHexToPixel(q,r) {
-    return {
-      x: cx + S*(3/2*q),
-      y: cy + S*(Math.sqrt(3)/2*q + Math.sqrt(3)*r)
-    };
+  // Draw all fog hexes in one batch, then all visible hexes — fewer fillStyle switches
+  mctx.fillStyle = '#070a0e';
+  for (const h of hexes) {
+    if (visibleSet.has(h.key)) continue;
+    mctx.beginPath();
+    mctx.moveTo(h.x + h.corners[0][0], h.y + h.corners[0][1]);
+    for (let i = 1; i < 6; i++) mctx.lineTo(h.x + h.corners[i][0], h.y + h.corners[i][1]);
+    mctx.closePath(); mctx.fill();
   }
-
-  // map hexes
-  for (let dq=-MAP_RADIUS; dq<=MAP_RADIUS; dq++) {
-    for (let dr=Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr<=Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
-      const p = mHexToPixel(dq,dr);
-      mctx.fillStyle = visibleSet.has(`${dq},${dr}`) ? '#0d1117' : '#070a0e';
-      mctx.beginPath();
-      for (let i=0;i<6;i++){
-        const a=(Math.PI/3)*i;   // flat-top: 0°,60°,120°...
-        const x=p.x+(S-0.5)*Math.cos(a), y=p.y+(S-0.5)*Math.sin(a);
-        if(i===0)mctx.moveTo(x,y);else mctx.lineTo(x,y);
-      }
-      mctx.closePath(); mctx.fill();
-    }
+  mctx.fillStyle = '#0d1117';
+  for (const h of hexes) {
+    if (!visibleSet.has(h.key)) continue;
+    mctx.beginPath();
+    mctx.moveTo(h.x + h.corners[0][0], h.y + h.corners[0][1]);
+    for (let i = 1; i < 6; i++) mctx.lineTo(h.x + h.corners[i][0], h.y + h.corners[i][1]);
+    mctx.closePath(); mctx.fill();
   }
 
   // forts
   for (const fort of Object.values(gameState.forts)) {
-    const p = mHexToPixel(fort.q, fort.r);
+    const hc = hexes.find(h => h.q === fort.q && h.r === fort.r);
+    if (!hc) continue;
     const baseColor = FORT_COLORS[fort.ftype] || '#8e44ad';
     mctx.fillStyle = fort.owner ? baseColor : baseColor+'66';
     mctx.beginPath();
-    mctx.arc(p.x, p.y, S*0.4, 0, Math.PI*2);
+    mctx.arc(hc.x, hc.y, S*0.4, 0, Math.PI*2);
     mctx.fill();
   }
 
   // tanks
   for (const [pid, tank] of Object.entries(gameState.tanks)) {
     if (!tank.alive) continue;
-    const p = mHexToPixel(tank.q, tank.r);
+    const cx2 = minimap.width/2, cy2 = minimap.height/2;
+    const tx = cx2 + S*(3/2*tank.q);
+    const ty = cy2 + S*(Math.sqrt(3)/2*tank.q + Math.sqrt(3)*tank.r);
     mctx.fillStyle = tank.color;
     mctx.beginPath();
-    mctx.arc(p.x, p.y, pid===myPlayerId ? S*0.65 : S*0.45, 0, Math.PI*2);
+    mctx.arc(tx, ty, pid === myPlayerId ? S*0.65 : S*0.45, 0, Math.PI*2);
     mctx.fill();
-    if (pid===myPlayerId) {
-      mctx.strokeStyle = '#fff';
-      mctx.lineWidth = 1;
-      mctx.stroke();
-    }
+    if (pid === myPlayerId) { mctx.strokeStyle = '#fff'; mctx.lineWidth = 1; mctx.stroke(); }
   }
 }
 
@@ -1434,29 +1480,48 @@ function updateUI() {
       winnerLine.style.display = 'none';
     }
 
-    // Final leaderboard rows
-    const rowsEl = document.getElementById('mo-lb-rows');
+    // Final leaderboard rows — includes KD, caps, and per-player vote dot
+    const rowsEl    = document.getElementById('mo-lb-rows');
     const rankLabels = ['gold','silver','bronze'];
-    rowsEl.innerHTML = (gameState.leaderboard || []).map((l, i) => `
-      <div class="mo-lb-row">
-        <div class="mo-lb-rank ${rankLabels[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
-        <div class="mo-lb-color" style="background:${l.color}"></div>
-        <span class="mo-lb-name">${escHtml(l.name)}</span>
-        <span class="mo-lb-forts">${l.forts}⚑</span>
-        <span class="mo-lb-score">${l.score}</span>
-      </div>
-    `).join('');
+    const votedPids  = new Set(gameState.votes?.voted_pids || []);
+    rowsEl.innerHTML = (gameState.leaderboard || []).map((l, i) => {
+      const kd = l.deaths > 0 ? (l.kills / l.deaths).toFixed(1) : (l.kills > 0 ? '∞' : '0');
+      return `
+        <div class="mo-lb-row">
+          <div class="mo-lb-rank ${rankLabels[i]||''}">${i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1}</div>
+          <div class="mo-lb-color" style="background:${l.color}"></div>
+          <span class="mo-lb-name">${escHtml(l.name)}</span>
+          <span class="mo-lb-kd">${l.kills}/${l.deaths}</span>
+          <span class="mo-lb-caps">${l.captures ?? 0}⚑</span>
+          <span class="mo-lb-score">${l.score}</span>
+          <div class="mo-lb-vote-dot${votedPids.has(l.pid) ? ' voted' : ''}" title="${votedPids.has(l.pid) ? l.name+' wants to play again' : 'waiting…'}"></div>
+        </div>`;
+    }).join('');
 
-    // Vote section
-    const votes = gameState.votes || {cast:0, total:1, my_voted:false};
+    // Vote button — read from server state, not local flag
+    // This is the fix: server authoritatively tells us if THIS player voted
+    const votes   = gameState.votes || {cast:0, total:1, my_voted:false};
     const voteBtn = document.getElementById('mo-vote-btn');
-    const voteStatus = document.getElementById('mo-vote-status');
+    if (votes.my_voted) {
+      voteBtn.disabled    = true;
+      voteBtn.textContent = '✓ VOTED';
+    } else {
+      voteBtn.disabled    = false;
+      voteBtn.textContent = '▶ PLAY AGAIN';
+    }
+    document.getElementById('mo-vote-status').textContent =
+      `${votes.cast} / ${votes.total} ready to play`;
 
-    voteBtn.disabled = votes.my_voted;
-    voteBtn.textContent = votes.my_voted ? '✓ VOTED' : '▶ PLAY AGAIN';
-    voteStatus.textContent = `${votes.cast} / ${votes.total} players ready`;
+    // Post-match countdown timer
+    const timerEl = document.getElementById('mo-rematch-timer');
+    const pmt = Math.ceil(gameState.post_match_timer || 0);
+    if (pmt > 0) {
+      timerEl.textContent = `Auto-starting in ${pmt}s`;
+      timerEl.className   = pmt <= 5 ? 'urgent' : '';
+    } else {
+      timerEl.textContent = '';
+    }
 
-    // Dead overlay should be hidden during match over
     document.getElementById('dead-overlay').classList.remove('active');
     return;
   } else {
@@ -1477,23 +1542,36 @@ function updateUI() {
       `Respawning in ${Math.ceil(tank.respawn_timer || 0)}s…`;
   }
 
-  // leaderboard
-  const lb = document.getElementById('leaderboard');
-  lb.innerHTML = (gameState.leaderboard||[]).map(l=>`
-    <div class="lb-row">
-      <div class="lb-color" style="background:${l.color}"></div>
-      <span class="lb-name">${escHtml(l.name)}</span>
-      <span class="lb-forts">${l.forts}⚑</span>
-      <span class="lb-score">${l.score}</span>
-    </div>
-  `).join('');
+  // leaderboard — now in game canvas overlay
+  const gameLbRows = document.getElementById('game-lb-rows');
+  if (gameLbRows) {
+    gameLbRows.innerHTML = (gameState.leaderboard||[]).map(l=>`
+      <div class="hud-lb-row">
+        <div class="hud-lb-color" style="background:${l.color}"></div>
+        <span class="hud-lb-name">${escHtml(l.name)}</span>
+        <span class="hud-lb-forts">${l.forts}⚑</span>
+        <span class="hud-lb-score">${l.score}</span>
+      </div>
+    `).join('');
+  }
 
-  // fort stats
+  // fort list — owned forts shown in overlay
   const myForts = Object.values(gameState.forts).filter(f=>f.owner===myPlayerId);
-  const fi = document.getElementById('fort-info');
-  fi.innerHTML = myForts.length === 0
-    ? '<span>No forts controlled</span>'
-    : myForts.map(f=>`<div>⚑ ${f.ftype.toUpperCase()} at (${f.q},${f.r})</div>`).join('');
+  const gameFortRows = document.getElementById('game-fort-rows');
+  const gameFortSection = document.getElementById('game-hud-forts');
+  if (gameFortRows) {
+    if (myForts.length === 0) {
+      gameFortRows.innerHTML = '<div class="hud-fort-row" style="opacity:0.5">No forts held</div>';
+    } else {
+      gameFortRows.innerHTML = myForts.map(f=>`
+        <div class="hud-fort-row">⚑ ${f.ftype.toUpperCase()} (${f.q},${f.r})</div>
+      `).join('');
+    }
+  }
+
+  // hide the overlay during match over
+  const gameLbOverlay = document.getElementById('game-hud-lb');
+  if (gameLbOverlay) gameLbOverlay.style.display = gameState.match_over ? 'none' : '';
 }
 
 function setBar(name, val, max, color) {
@@ -1663,6 +1741,7 @@ function handleServerMsg(data) {
 
     case 'state':
       gameState = data;
+      minimapDirty = true;
       updateUI();
       break;
 
@@ -1727,12 +1806,7 @@ function handleServerMsg(data) {
 
     case 'vote_ack':
       if (data.error) notify('⚠ '+data.error, '#e74c3c');
-      else {
-        const v = data;
-        document.getElementById('mo-vote-status').textContent =
-          `${v.voted} / ${v.total} players ready`;
-        if (v.voted >= v.total) notify('All players voted — starting new match!', '#2ecc71');
-      }
+      // button state is now driven entirely by server state in updateUI, no local override needed
       break;
 
     case 'error':
@@ -1887,6 +1961,7 @@ document.getElementById('close-upgrades').addEventListener('click', () => {
 
 document.getElementById('mo-vote-btn').addEventListener('click', () => {
   sendMsg({type: 'vote_rematch'});
+  // Optimistically grey out to prevent double-clicks while server responds
   const btn = document.getElementById('mo-vote-btn');
   btn.disabled = true;
   btn.textContent = '✓ VOTED';
@@ -2115,35 +2190,43 @@ function mobUpdateDrawer() {
 // render minimap to any canvas element
 function renderMinimapTo(targetCanvas, visibleSet) {
   const mc = targetCanvas.getContext('2d');
-  const W = targetCanvas.width, H = targetCanvas.height;
-  mc.fillStyle = '#060910';
-  mc.fillRect(0, 0, W, H);
-  const S = W / (MAP_RADIUS * 2.2) / 1.73;
-  const cx = W/2, cy = H/2;
-  function mhp(q, r) { return { x: cx + S*(3/2*q), y: cy + S*(Math.sqrt(3)/2*q + Math.sqrt(3)*r) }; }
-  for (let dq = -MAP_RADIUS; dq <= MAP_RADIUS; dq++) {
-    for (let dr = Math.max(-MAP_RADIUS,-dq-MAP_RADIUS); dr <= Math.min(MAP_RADIUS,-dq+MAP_RADIUS); dr++) {
-      const p = mhp(dq, dr);
-      mc.fillStyle = visibleSet.has(`${dq},${dr}`) ? '#0d1117' : '#070a0e';
-      mc.beginPath();
-      for (let i = 0; i < 6; i++) {
-        const a = (Math.PI/3)*i;
-        i === 0 ? mc.moveTo(p.x+(S-0.5)*Math.cos(a), p.y+(S-0.5)*Math.sin(a))
-                : mc.lineTo(p.x+(S-0.5)*Math.cos(a), p.y+(S-0.5)*Math.sin(a));
-      }
-      mc.closePath(); mc.fill();
-    }
+  const W  = targetCanvas.width;
+  // Build/reuse cache — mobile drawer canvas may be different size so check S matches
+  const neededS = W / (MAP_RADIUS * 2.2) / 1.73;
+  if (!minimapHexCache || Math.abs(minimapHexCache.S - neededS) > 0.001) buildMinimapCache(W);
+  const { S, hexes } = minimapHexCache;
+
+  mc.fillStyle = '#060910'; mc.fillRect(0, 0, W, targetCanvas.height);
+
+  mc.fillStyle = '#070a0e';
+  for (const h of hexes) {
+    if (visibleSet.has(h.key)) continue;
+    mc.beginPath();
+    mc.moveTo(h.x + h.corners[0][0], h.y + h.corners[0][1]);
+    for (let i = 1; i < 6; i++) mc.lineTo(h.x + h.corners[i][0], h.y + h.corners[i][1]);
+    mc.closePath(); mc.fill();
+  }
+  mc.fillStyle = '#0d1117';
+  for (const h of hexes) {
+    if (!visibleSet.has(h.key)) continue;
+    mc.beginPath();
+    mc.moveTo(h.x + h.corners[0][0], h.y + h.corners[0][1]);
+    for (let i = 1; i < 6; i++) mc.lineTo(h.x + h.corners[i][0], h.y + h.corners[i][1]);
+    mc.closePath(); mc.fill();
   }
   for (const fort of Object.values(gameState.forts)) {
-    const p = mhp(fort.q, fort.r);
+    const hc = hexes.find(h => h.q === fort.q && h.r === fort.r);
+    if (!hc) continue;
     mc.fillStyle = fort.owner ? (FORT_COLORS[fort.ftype] || '#8e44ad') : (FORT_COLORS[fort.ftype] || '#8e44ad') + '55';
-    mc.beginPath(); mc.arc(p.x, p.y, S*0.4, 0, Math.PI*2); mc.fill();
+    mc.beginPath(); mc.arc(hc.x, hc.y, S*0.4, 0, Math.PI*2); mc.fill();
   }
+  const cx2 = W/2, cy2 = targetCanvas.height/2;
   for (const [pid, tank] of Object.entries(gameState.tanks)) {
     if (!tank.alive) continue;
-    const p = mhp(tank.q, tank.r);
+    const tx = cx2 + S*(3/2*tank.q);
+    const ty = cy2 + S*(Math.sqrt(3)/2*tank.q + Math.sqrt(3)*tank.r);
     mc.fillStyle = tank.color;
-    mc.beginPath(); mc.arc(p.x, p.y, pid === myPlayerId ? S*0.65 : S*0.45, 0, Math.PI*2); mc.fill();
+    mc.beginPath(); mc.arc(tx, ty, pid === myPlayerId ? S*0.65 : S*0.45, 0, Math.PI*2); mc.fill();
     if (pid === myPlayerId) { mc.strokeStyle = '#fff'; mc.lineWidth = 1; mc.stroke(); }
   }
 }
