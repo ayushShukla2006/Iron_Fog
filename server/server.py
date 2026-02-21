@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 # ─── Constants ────────────────────────────────────────────────────────────────
 MAP_RADIUS      = 8          # hex grid radius
 FOG_RANGE       = 3          # visibility radius in hexes
-FORT_COUNT      = 12         # total forts on map
+FORT_COUNT      = 8         # total forts on map
 CAPTURE_TIME    = 5.0        # seconds to capture a fort
 MAX_PLAYERS     = 4
 TICK_RATE       = 20         # server ticks per second
@@ -34,7 +34,7 @@ FUEL_PER_HEX    = 4          # fuel cost per hex moved      (was 3)
 AMMO_SHOOT      = 8          # ammo cost per shot
 SHELL_SPEED     = 2.5        # hexes per second
 SHELL_DAMAGE    = 40
-FORT_FUEL_GEN   = 0.7        # fuel per second per fort     (was 2.0 — too abundant)
+FORT_FUEL_GEN   = 1.2        # fuel per second per fort     (was 2.0 — too abundant)
 FORT_AMMO_GEN   = 0.9        # ammo per second per fort     (was 1.2 — slight trim)
 FORT_GEAR_GEN   = 0.10       # gears per second per fort    (was 0.08 — slight bump)
 MOVE_SPEED_BASE = 2.5        # hexes per second base
@@ -492,10 +492,15 @@ class GameState:
                         shooter.kills += 1
                         tank.deaths += 1
 
-                        # ── Resource loot: victim loses half of fuel, ammo, gears ──
-                        fuel_lost = tank.fuel * 0.5 if tank.fuel * 0.5 >= LOOT_FUEL_FLOOR else max(0, tank.fuel - LOOT_FUEL_FLOOR)
-                        ammo_lost = tank.ammo * 0.5 if tank.ammo * 0.5 >= LOOT_AMMO_FLOOR else max(0, tank.ammo - LOOT_AMMO_FLOOR)
-                        gear_lost = max(0, tank.gears * 0.5)   # gears have floor of 0
+                        # ── Resource loot: victim loses a random portion of fuel, ammo, gears ──
+                        # Loss ratio is random (20%–60%), but resources never drop below floor
+                        fuel_ratio = random.uniform(0.20, 0.60)
+                        ammo_ratio = random.uniform(0.20, 0.60)
+                        gear_ratio = random.uniform(0.20, 0.60)
+
+                        fuel_lost = max(0, min(tank.fuel * fuel_ratio, tank.fuel - LOOT_FUEL_FLOOR))
+                        ammo_lost = max(0, min(tank.ammo * ammo_ratio, tank.ammo - LOOT_AMMO_FLOOR))
+                        gear_lost = max(0, min(tank.gears * gear_ratio, tank.gears - LOOT_GEAR_FLOOR))
 
                         tank.fuel  = max(LOOT_FUEL_FLOOR,  tank.fuel  - fuel_lost)
                         tank.ammo  = max(LOOT_AMMO_FLOOR,  tank.ammo  - ammo_lost)
